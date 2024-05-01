@@ -78,6 +78,10 @@ This completes the setup of your project environment. You now have all the neces
 
 This part of the tutorial will walk you through customizing the `vbot.py` file. You will need to replace certain placeholders with your actual data to make the bot functional for your specific use case.
 
+```
+nano vbot.py
+```
+
 ### Setting Up Your Validator Addresses
 
 To fetch validator-specific data, the bot must know which validator addresses to query. The code provided has placeholders marked as `YOUR_OPERATOR_VALOPER_ADDRESS` and `YOUR_SIGNER_VALCONS_ADDRESS`. Here's how to update them:
@@ -135,3 +139,79 @@ Once you're all set, you can start your bot by running the following command in 
 python3 vbot.py
 ```
 
+---
+
+## Step 4: Keep the Bot Running Continuously
+
+To ensure your Telegram bot runs continuously, even after you close the terminal or in case of system reboots, you can use `systemd`. This approach allows the bot to start automatically at boot and restart on failure.
+
+### Creating a Systemd Service
+
+Follow these steps to create and configure a `systemd` service file for your bot:
+
+1. **Create a Systemd Service File**:
+   - Open a terminal.
+   - You need root access to create a service file in `/etc/systemd/system/`. Use a text editor like `nano` or `vim` to create the file:
+     ```bash
+     sudo nano /etc/systemd/system/vbot.service
+     ```
+
+2. **Configure the Service File**:
+   - Insert the following configuration into the editor. Make sure the paths match where you've stored your script.
+     ```ini
+     [Unit]
+     Description=Validator Bot
+     After=network.target
+
+     [Service]
+     Type=simple
+     User=root
+     WorkingDirectory=/root/validatorbot
+     ExecStart=/usr/bin/python3 /root/validatorbot/vbot.py
+     Restart=always
+
+     [Install]
+     WantedBy=multi-user.target
+     ```
+   - Save and exit the editor (for `nano`, press `Ctrl+X` to close, confirm with `Y` to save changes, and press `Enter` to write to the file).
+
+3. **Enable and Start Your Service**:
+   - Reload the `systemd` system to recognize your new service file:
+     ```bash
+     sudo systemctl daemon-reload
+     ```
+   - Enable the service to start at boot:
+     ```bash
+     sudo systemctl enable vbot.service
+     ```
+   - Start the service immediately to begin running your bot:
+     ```bash
+     sudo systemctl start vbot.service
+     ```
+
+4. **Check the Status of Your Service**:
+   - You can check the status of your service to ensure it's running properly:
+     ```bash
+     sudo systemctl status vbot.service
+     ```
+   - This command will show the current status of your bot service, any log output, and whether it is active or has encountered errors.
+
+By configuring your bot as a `systemd` service, you ensure that it will continuously run in the background, restart automatically if it fails, and automatically start when the server boots up.
+
+---
+
+### Troubleshooting
+Ensure that the script vbot.py has the appropriate permissions set to be executable, especially since it's located in the /root directory, which typically has restricted access.
+   - You can set the execute permission by running:
+     ```bash
+     chmod +x /root/validatorbot/vbot.py
+     ```
+
+Make sure to apply these changes to your service file, then reload the systemd daemon and restart the service:
+
+   ```bash
+   systemctl daemon-reload
+   systemctl restart vbot.service
+   ```
+
+---
